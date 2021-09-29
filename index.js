@@ -1,3 +1,4 @@
+//stock Market stuff
 const express = require ('express');
 const app = express();
 var exphbs  = require('express-handlebars');
