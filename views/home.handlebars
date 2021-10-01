@@ -1,3 +1,11 @@
-<h1>This is my handleBars homepage</h1>
-<p>{{ stuff }}</p>
-<p>{{ hello }}</p>
+<br></br>
+<div class = 'container', style = "background-color: #bbbbbb; ">
+	<h1>{{stock.companyName}} ({{stock.symbol}})</h1>
+	</br>
+	<strong>Latest Price: {{stock.latestPrice}}</strong>{{stock.currency}}
+	</br>
+	<strong>Percent Change: </strong>{{stock.percentChange}}%
+	</br>
+	<strong>YTD Change: </strong>{{stock.ytdChange}}%
+	</br>
+</div>
