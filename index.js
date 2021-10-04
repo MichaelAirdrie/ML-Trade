@@ -50,7 +50,7 @@ app.post('/', function (req, res) {
 
 app.get('/about.html', function (req, res) {
     res.render('about', {
-    	about: "In here I could type a bunch of stuff about my myself, it will then get converted into a paragraph on the about page"
+    	about: "COMP4905 Thesis Project"
     });
 });
 

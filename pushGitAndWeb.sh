@@ -1,5 +1,5 @@
 git add .
-git commit "Default Push"
+git commit -am "Default Push"
 git push
 
 git push heroku main
