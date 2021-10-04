@@ -2,8 +2,32 @@
 <div class = 'container', style = "background-color: #bbbbbb; ">
 	<h1>{{stock.companyName}} ({{stock.symbol}})</h1>
 	</br>
-	{{lookupFields}}
-	{{#each stock}}
+
+	{{#each lookupFields}}
 		<p><strong>{{@key}}:</strong> {{this}}</p>
 	{{/each}}
-</div>
+
+<script type = "text/javascript">
+function changeAttribute(element) { 
+
+	console.log("before: ", element.checked);
+	if (element.classList.contains("dropdown-item-checked")){
+		element.classList.remove("dropdown-item-checked");
+		return;
+	}
+	element.classList.add("dropdown-item-checked");
+	
+         }  
+</script>
+<ul class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Pick Attributes
+          </a>
+          <link rel="stylesheet" href="styles.css">
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" checked=false id="avgTotalVolume" onclick = "changeAttribute(this)">AvgTotalVolume</a></li>
+            <li><a class="dropdown-item dropdown-item-checked" checked=true id="change" onclick = "changeAttribute(this)">Change</a></li>
+            <li><a class="dropdown-item" checked=false id="changePercent" onclick = "changeAttribute(this)">Change Percent</a></li>
+          </ul>
+      </ul>
+      </div>

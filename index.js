@@ -15,21 +15,17 @@ const lookupFields = [
 	"avgTotalVolume",
 	"week52High",
 	"week52Low"
-];
-function parseApiCall(filter, data){
-	var ret = {};
-	for (var i = 0; i < filter.length; i++){
-			var key = filter[i];
-			var dataf = data[filter[i]];
-			var obj = {key : dataf};
-			if (dataf){
-				ret += obj;	
-			}
+];	
+function getPickedFields(fields, stocks){
+	var selectedFields = {};
+	for (var i = 0; i < fields.length; i++){
+		if (stocks[fields[i]]){
+		selectedFields[fields[i]] = stocks[fields[i]];
 		}
-		return ret;
-};
-console.log(parseApiCall(lookupFields, {"latestPrice": "600", "change": "34", "hamburger": "no thanks"}));	
-const test = "Hello";
+	}
+	//console.log(selectedFields);
+	return selectedFields;
+}
 //bodyParser middle where?
 app.use(bodyParser.urlencoded({extended: false}));
 
@@ -46,15 +42,13 @@ request(apiString + apiDataType + ticker +"/quote?token=pk_5c761d09edfb4beabe74c
 app.engine('handlebars', exphbs());
 app.set('view engine', 'handlebars');
 
-const hey = "hey whats up hello!"
-
 //HandleBar Routes2
 
 app.get('/', function (req, res) {
 	callApi(function(doneApi, ticker, apiDataType) {
 		res.render('home', {
     	stock: doneApi,
-    	lookupFields: lookupFields
+    	lookupFields: getPickedFields(lookupFields, doneApi)
     	});
 	}, 'aapl', apiDataType);
 });
@@ -65,7 +59,7 @@ app.post('/', function (req, res) {
 		//posted = req.body.stock_ticker;
 		res.render('home', {
     	stock: doneApi,
-    	lookupFields: lookupFields
+    	lookupFields: getPickedFields(lookupFields, doneApi)
     	});
 	}, req.body.stock_ticker, apiDataType);
 });
@@ -74,6 +68,13 @@ app.post('/', function (req, res) {
 app.get('/about.html', function (req, res) {
     res.render('about', {
     	about: "COMP4905 Thesis Project"
+    });
+});
+
+app.get('/portfolio.html', function (req, res) {
+    res.render('portfolio', {
+    	title: "UserFromDataBase portfolio's",
+    	portfolioArray: "Data encapsolating Stocks in portfolio"
     });
 });
 

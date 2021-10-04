@@ -1,0 +1,12 @@
+.dropdown-item-checked::before {
+  position: absolute;
+  left: .1rem;
+  content: '✓';
+  font-weight: 600;
+}
+.dropdown-item-unchecked::before {
+  position: absolute;
+  left: .1rem;
+  content: '';
+  font-weight: 600;
+}
