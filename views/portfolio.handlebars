@@ -1,4 +1,14 @@
 <br></br>
 <h1>{{title}}</h1>
 </br>
-<p>{{ portfolioArray }}</p> 
+<div class='container' , style="background-color: #bbbbbb; ">
+    {{#each portfolioArray}}
+    <p><strong>{{@key}}:</strong></p>
+    {{#each this}}
+    <div class='container' , style="background-color: #cccccc; ">
+        <p><strong>{{@key}}:</strong> {{this}}</p>
+    </div>
+        {{/each}}
+        {{/each}}
+        <p>{{ portfolioArray }}</p>
+    </div>

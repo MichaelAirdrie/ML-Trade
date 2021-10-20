@@ -73,8 +73,10 @@ app.get('/about.html', function (req, res) {
 
 app.get('/portfolio.html', function (req, res) {
     res.render('portfolio', {
-    	title: "UserFromDataBase portfolio's",
-    	portfolioArray: "Data encapsolating Stocks in portfolio"
+        title: "UserFromDataBase portfolio's",
+        portfolioArray: {
+            "StockName": { "amountOwned": 1 },
+            "StockName2": {"amountOwned": 2 }}
     });
 });
 
