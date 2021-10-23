@@ -8,6 +8,19 @@ const bodyParser = require('body-parser');
 var stockTicker = 'fb'
 var apiString = "https://cloud.iexapis.com/";
 var apiDataType = "stable/stock/";
+var mongo = require('mongodb');
+
+//string to connect to mongoDB
+const uri = "mongodb+srv://MLStock:12345@nodeapp.fnwmx.mongodb.net/userData?retryWrites=true&w=majority";
+const client = new mongo.MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+client.connect(err => {
+  const collection = client.db("test").collection("devices");
+  console.log(collection);
+  // perform actions on the collection object
+  client.close();
+});
+
 const lookupFields = [
 	"latestPrice",
 	"change",
