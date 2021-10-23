@@ -80,8 +80,13 @@ app.get('/portfolio.html', function (req, res) {
     });
 });
 
+app.get('/portfolio.json', function (req, res) {
+    console.log((path.normalize(__dirname + '/portfolio.json')));
+    res.sendFile(path.normalize(__dirname + '/portfolio.json'))
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.listen(PORT, () => console.log("Server listening on ", PORT));
-
+console.log((path.normalize(__dirname + '/portfolio.json')));
