@@ -9,17 +9,33 @@ var stockTicker = 'fb'
 var apiString = "https://cloud.iexapis.com/";
 var apiDataType = "stable/stock/";
 var mongo = require('mongodb');
+const mongoose = require('mongoose');
+const PortfolioModel = require("./Schema&Models/stockModel");
 
 //string to connect to mongoDB
-const uri = "mongodb+srv://MLStock:12345@nodeapp.fnwmx.mongodb.net/userData?retryWrites=true&w=majority";
-const client = new mongo.MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const uri = "mongodb+srv://MLStock:12345@nodeapp.fnwmx.mongodb.net/MLStock-db?retryWrites=true&w=majority";
+//const client = new mongo.MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
-client.connect(err => {
-  const collection = client.db("test").collection("devices");
-  console.log(collection);
-  // perform actions on the collection object
-  client.close();
+mongoose.connect(uri,  { useNewUrlParser: true, useUnifiedTopology: true })
+	.then((result) => startApp())
+	.catch((err) => console.log("Error! ", err));
+
+
+app.get('/add-Portfolio', (req, res)=>{
+	const data = new PortfolioModel({
+		userId: "dev",
+		portfolioID: 1,
+		portfolioName: "Test2"
+	});
+	data.save()
+		.then((result) => {
+			res.send(result)
+		})
+		.catch((err) => {
+			console.log(err);
+		});
 });
+
 
 const lookupFields = [
 	"latestPrice",
@@ -100,6 +116,8 @@ app.get('/portfolio.json', function (req, res) {
 
 const PORT = process.env.PORT || 5000;
 
-app.use(express.static(path.join(__dirname, 'public')));
-app.listen(PORT, () => console.log("Server listening on ", PORT));
-console.log((path.normalize(__dirname + '/portfolio.json')));
+function startApp(){
+	app.use(express.static(path.join(__dirname, 'public')));
+	app.listen(PORT, () => console.log("Server listening on ", PORT));
+	console.log((path.normalize(__dirname + '/portfolio.json')));
+}
