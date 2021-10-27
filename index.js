@@ -13,8 +13,19 @@ const mongoose = require('mongoose');
 const PortfolioModel = require("./Schema&Models/stockModel");
 
 //string to connect to mongoDB
-const uri = "mongodb+srv://MLStock:12345@nodeapp.fnwmx.mongodb.net/MLStock-db?retryWrites=true&w=majority";
+if (process.env.MONGODB_URI){
+	console.log("what");
+	console.log(process.env.MONGODB_URI + "Hey");
+	const uri = process.env.MONGODB_URI;
+}
+else{
+	console.log("what2");
+	uri = "mongodb+srv://MLStock:12345@nodeapp.fnwmx.mongodb.net/MLStock-db?retryWrites=true&w=majority";
+}
+//uri = "mongodb+srv://MLStock:12345@nodeapp.fnwmx.mongodb.net/MLStock-db?retryWrites=true&w=majority"
+//const uri = "mongodb+srv://MLStock:12345@nodeapp.fnwmx.mongodb.net/MLStock-db?retryWrites=true&w=majority";
 //const client = new mongo.MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+//heroku config:set MONGODB_URI="mongodb+srv://MLStock:12345@nodeapp.fnwmx.mongodb.net/MLStock-db?retryWrites=true&w=majority"
 
 mongoose.connect(uri,  { useNewUrlParser: true, useUnifiedTopology: true })
 	.then((result) => startApp())
@@ -55,7 +66,7 @@ app.get('/one-Portfolio', (req, res) =>{
 			console.log(err);
 		});
 })
-
+//res.redirect('/onePorfolio')
 const lookupFields = [
 	"latestPrice",
 	"change",
