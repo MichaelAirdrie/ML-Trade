@@ -36,6 +36,25 @@ app.get('/add-Portfolio', (req, res)=>{
 		});
 });
 
+app.get('/all-Portfolios', (req, res) =>{
+	PortfolioModel.find()
+		.then((result) =>{
+			res.send(result);
+		})
+		.catch((err) =>{
+			console.log(err);
+		});
+})
+
+app.get('/one-Portfolio', (req, res) =>{
+	PortfolioModel.findById("6176906ca6ece51f2356f882")
+		.then((result) =>{
+			res.send(result);
+		})
+		.catch((err) =>{
+			console.log(err);
+		});
+})
 
 const lookupFields = [
 	"latestPrice",
