@@ -130,6 +130,27 @@ app.get('/about.html', function (req, res) {
     });
 });
 
+app.get('/privacy.html', function (req, res) {
+    res.render('privacy', {
+    	email: "UserEmail"
+    });
+});
+
+app.get('/terms.html', function (req, res) {
+    res.render('terms', {
+    	email: "UserEmail"
+    });
+});
+
+app.get('/machineLearning.html', function (req, res) {
+    res.render('machineLearning', {
+    	email: "UserEmail",
+    	portfolioArray: {
+            "StockName": { "amountOwned": 1 },
+            "StockName2": {"amountOwned": 2 }}
+    });
+});
+
 app.get('/portfolio.html', function (req, res) {
     res.render('portfolio', {
         title: "UserFromDataBase portfolio's",
