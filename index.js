@@ -9,6 +9,7 @@ var stockTicker = 'fb'
 var apiString = "https://cloud.iexapis.com/";
 var apiDataType = "stable/stock/";
 var mongo = require('mongodb');
+var passport = require('passport');
 const mongoose = require('mongoose');
 const PortfolioModel = require("./Schema&Models/stockModel");
 
@@ -30,6 +31,44 @@ uri = "mongodb+srv://MLStock:12345@nodeapp.fnwmx.mongodb.net/MLStock-db?retryWri
 mongoose.connect(uri,  { useNewUrlParser: true, useUnifiedTopology: true })
 	.then((result) => startApp())
 	.catch((err) => console.log("Error! ", err));
+
+var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+
+// Use the GoogleStrategy within Passport.
+//   Strategies in Passport require a `verify` function, which accept
+//   credentials (in this case, an accessToken, refreshToken, and Google
+//   profile), and invoke a callback with a user object.
+var callBackURL = "http://localhost:5000"
+passport.use(new GoogleStrategy({
+    clientID: "125985736764-sjockqskggvontg0ad5t3je755tebjo0.apps.googleusercontent.com",
+    clientSecret: "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",
+    callbackURL: callBackURL
+  },
+  function(accessToken, refreshToken, profile, done) {
+       User.findOrCreate({ googleId: profile.id }, function (err, user) {
+         return done(err, user);
+       });
+  }
+));
+
+// GET /auth/google
+//   Use passport.authenticate() as route middleware to authenticate the
+//   request.  The first step in Google authentication will involve
+//   redirecting the user to google.com.  After authorization, Google
+//   will redirect the user back to this application at /auth/google/callback
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/plus.login'] }));
+
+// GET /auth/google/callback
+//   Use passport.authenticate() as route middleware to authenticate the
+//   request.  If authentication fails, the user will be redirected back to the
+//   login page.  Otherwise, the primary route function function will be called,
+//   which, in this example, will redirect the user to the home page.
+app.get('/auth/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  function(req, res) {
+    res.redirect('/');
+  });
 
 
 app.get('/add-Portfolio', (req, res)=>{
@@ -127,6 +166,12 @@ app.post('/', function (req, res) {
 app.get('/about.html', function (req, res) {
     res.render('about', {
     	about: "COMP4905 Thesis Project"
+    });
+});
+
+app.get('/login', function (req, res) {
+    res.render('login', {
+    	email: "UserEmail"
     });
 });
 

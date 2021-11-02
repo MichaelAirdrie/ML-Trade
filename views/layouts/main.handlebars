@@ -1,6 +1,24 @@
 <!doctype html>
 <html lang="en">
+<script>
+function onSignIn(googleUser) {
+  var profile = googleUser.getBasicProfile();
+  console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+  console.log('Name: ' + profile.getName());
+  console.log('Image URL: ' + profile.getImageUrl());
+  console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+}
+function signOut() {
+  var auth2 = gapi.auth2.getAuthInstance();
+  auth2.signOut().then(function () {
+    console.log('User signed out.');
+    });
+  }
+
+</script>
   <head>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="125985736764-sjockqskggvontg0ad5t3je755tebjo0.apps.googleusercontent.com">
     <meta name="google-site-verification" content="k-LYNU7BT0_0Vfy2sMOH-28fb9Dzvzq4Zz8pnPW5iYg" />
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -33,8 +51,9 @@
           <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
             <li><a class="dropdown-item" href="/privacy.html">Privacy Policy</a></li>
             <li><a class="dropdown-item" href="/terms.html">Terms</a></li>
-            <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="/machineLearning.html">Machine Learning</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/login">Login</a></li>
           </ul>
       </ul>
       <form class="d-flex" action="/" method="POST">
@@ -47,7 +66,8 @@
     <div class = 'container'>
       {{{body}}}
     </div>
-
+    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+    <a href="#" onclick="signOut();">Sign out</a>
     <!-- Optional JavaScript; choose one of the two! -->
 
     <!-- Option 1: Bootstrap Bundle with Popper -->
