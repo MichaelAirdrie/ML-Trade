@@ -1,6 +1,8 @@
 //stock Market stuff
 const express = require ('express');
 const app = express();
+app.use(express.json());
+const cookieParser = require("cookie-parser");
 var exphbs = require('express-handlebars');
 const path = require('path');
 const request = require('request');
@@ -12,6 +14,18 @@ var mongo = require('mongodb');
 var passport = require('passport');
 const mongoose = require('mongoose');
 const PortfolioModel = require("./Schema&Models/stockModel");
+var jwt = require('jsonwebtoken');
+
+app.use(bodyParser.urlencoded({extended: false}));
+
+app.engine('handlebars', exphbs());
+app.set('view engine', 'handlebars');
+app.use(express.json());
+app.use(cookieParser());
+
+const {OAuth2Client} = require('google-auth-library');
+const CLIENT_ID = "125985736764-sjockqskggvontg0ad5t3je755tebjo0.apps.googleusercontent.com";
+const client = new OAuth2Client(CLIENT_ID);
 
 //string to connect to mongoDB
 if (process.env.MONGODB_URI){
@@ -38,7 +52,7 @@ var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 //   Strategies in Passport require a `verify` function, which accept
 //   credentials (in this case, an accessToken, refreshToken, and Google
 //   profile), and invoke a callback with a user object.
-var callBackURL = "http://localhost:5000"
+var callBackURL = "http://localhost:5000";
 passport.use(new GoogleStrategy({
     clientID: "125985736764-sjockqskggvontg0ad5t3je755tebjo0.apps.googleusercontent.com",
     clientSecret: "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",
@@ -57,7 +71,8 @@ passport.use(new GoogleStrategy({
 //   redirecting the user to google.com.  After authorization, Google
 //   will redirect the user back to this application at /auth/google/callback
 app.get('/auth/google',
-  passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/plus.login'] }));
+  passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/plus.login'] 
+}));
 
 // GET /auth/google/callback
 //   Use passport.authenticate() as route middleware to authenticate the
@@ -70,8 +85,59 @@ app.get('/auth/google/callback',
     res.redirect('/');
   });
 
+app.post('/login', (req, res)=> {
+	let token = req.body.token;
+	//console.log(token);
+	console.log("app.post /login's ClientID: ", CLIENT_ID);
+		async function verify() {
+	  		const ticket = await client.verifyIdToken({
+	    	idToken: token,
+	    	audience: CLIENT_ID 
+	    	// Specify the CLIENT_ID of the app that accesses the backend
+	      // Or, if multiple clients access the backend:
+	      //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
+	  		});
+	  	const payload = ticket.getPayload();
+	  	const userid = payload['sub'];
+	  	//console.log(payload);
+		}
+	verify().then(()=>{
+		res.cookie("session-token", token); 
+		res.send('success'); 
+		res.redirect('/portfolios.html');
+	})
+		.catch(console.error);
+});
+function checkAuthenticated(req, res, next){
+	let token = req.cookies['session-token'];
+	let user = {};
+	async function verify() {
+	  	const ticket = await client.verifyIdToken({
+	    	idToken: token,
+	    	audience: CLIENT_ID 
+	  		});
+	  	const payload = ticket.getPayload();
+	  	const userid = payload['sub'];
+	  	user.name = payload.name;
+	  	user.email = payload.email;
+	  	user.picture = payload.picture;
+	  	console.log(payload);
 
-app.get('/add-Portfolio', (req, res)=>{
+		verify().then(()=>{
+			req.user = user;
+			next();
+		})
+		.catch(err =>{
+			res.redirect('/login');
+		});
+	};
+}
+app.post('/logout', (req, res)=> {
+	res.clearCookie('session-token');
+	res.redirect('/login');
+});
+
+app.get('/add-Portfolio',  (req, res)=>{
 	const data = new PortfolioModel({
 		userId: "dev",
 		portfolioID: 1,
@@ -86,7 +152,8 @@ app.get('/add-Portfolio', (req, res)=>{
 		});
 });
 
-app.get('/all-Portfolios', (req, res) =>{
+app.get('/all-Portfolios',  (req, res) =>{
+	let user = req.user;
 	PortfolioModel.find()
 		.then((result) =>{
 			res.send(result);
@@ -125,7 +192,7 @@ function getPickedFields(fields, stocks){
 	return selectedFields;
 }
 //bodyParser middle where?
-app.use(bodyParser.urlencoded({extended: false}));
+
 
 function callApi(finishedApi, ticker, apiDataType){
 request(apiString + apiDataType + ticker +"/quote?token=pk_5c761d09edfb4beabe74c628ef368295", {json: true}, (err, res, body) => {
@@ -137,8 +204,7 @@ request(apiString + apiDataType + ticker +"/quote?token=pk_5c761d09edfb4beabe74c
 });
 }
 //Express Middle Where???
-app.engine('handlebars', exphbs());
-app.set('view engine', 'handlebars');
+
 
 //HandleBar Routes2
 
@@ -151,7 +217,7 @@ app.get('/', function (req, res) {
 	}, 'aapl', apiDataType);
 });
 
-app.post('/', function (req, res) {
+app.post('/',  function (req, res) {
 	
 	callApi(function(doneApi) {
 		//posted = req.body.stock_ticker;
@@ -163,7 +229,7 @@ app.post('/', function (req, res) {
 });
 //api key pk_5c761d09edfb4beabe74c628ef368295 
 
-app.get('/about.html', function (req, res) {
+app.get('/about.html',  function (req, res) {
     res.render('about', {
     	about: "COMP4905 Thesis Project"
     });
@@ -175,19 +241,19 @@ app.get('/login', function (req, res) {
     });
 });
 
-app.get('/privacy.html', function (req, res) {
+app.get('/privacy.html',  function (req, res) {
     res.render('privacy', {
     	email: "UserEmail"
     });
 });
 
-app.get('/terms.html', function (req, res) {
+app.get('/terms.html',  function (req, res) {
     res.render('terms', {
     	email: "UserEmail"
     });
 });
 
-app.get('/machineLearning.html', function (req, res) {
+app.get('/machineLearning.html',  function (req, res) {
     res.render('machineLearning', {
     	email: "UserEmail",
     	portfolioArray: {
@@ -196,7 +262,7 @@ app.get('/machineLearning.html', function (req, res) {
     });
 });
 
-app.get('/portfolio.html', function (req, res) {
+app.get('/portfolio.html',  function (req, res) {
     res.render('portfolio', {
         title: "UserFromDataBase portfolio's",
         portfolioArray: {
