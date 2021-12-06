@@ -2,17 +2,14 @@
 <h1>{{title}}</h1>
 </br>
 <div class='container' , style="background-color: #bbbbbb; ">
-    {{#each portfolioArray}}
-    <strong>{{@key}}:</strong>
-    {{#each this}}
-    <div class='container' , style="background-color: #cccccc; ">
+    <h1>{{series}} ({{series}})</h1>
+    </br>
+
+    {{#each series}}
         <p><strong>{{@key}}:</strong> {{this}}</p>
-    </div>
     {{/each}}
-    {{/each}}
-    <p>{{ portfolioArray }}</p>
 </div>
-<form class="d-flex" action="/porfolio.json" method="GET">
-    <input class="form-control me-2" type="updateLocalPortfolio" placeholder="Lookup Stock Ticker" aria-label="Search" name="portfolio">
+<form class="d-flex" action="/machineLearning.html" method="POST">
+    <input class="form-control me-2" type="updateLocalPortfolio" placeholder="Lookup Stock Ticker" aria-label="Search" name="stock_ticker">
     <button class="btn btn-outline-success" type="submit">Search</button>
 </form>

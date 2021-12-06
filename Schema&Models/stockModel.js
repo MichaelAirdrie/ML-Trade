@@ -13,23 +13,13 @@ const UserPortfolioSchema = new Schema({
 	portfolioName: {
 		type: String,
 		required: true
-	}
+	},
+	portfolioStocks: 
+		[{type: String}]
+	
 }, { timestamps: true });
 
-const GoogleAuthSchema = new Schema({
-	userId: {
-		type: String,
-		required: true
-	},
-	portfolioID: {
-		type: Number,
-		required: true
-	},
-	portfolioName: {
-		type: String,
-		required: true
-	}
-}, { timestamps: true });
+
 
 const Model = mongoose.model('userData', UserPortfolioSchema);
 module.exports = Model;

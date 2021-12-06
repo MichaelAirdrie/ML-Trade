@@ -1,5 +1,5 @@
 <br></br>
-<h1>{{title}}</h1>
+<h1>{{portfolioName}}</h1>
 </br>
 <div class='container' , style="background-color: #bbbbbb; ">
     {{#each portfolioArray}}
@@ -12,8 +12,7 @@
     {{/each}}
     <p>{{ portfolioArray }}</p>
 </div>
-<form class="d-flex" action="/add-Portfolio" method="POST">
+<form class="d-flex" action="/add-Stock" method="POST">
     <input class="form-control me-2" type="updateLocalPortfolio" placeholder="Lookup Stock Ticker" aria-label="Search" name="portfolio">
-    <button class="btn btn-outline-success" type="submit">Create New</button>
-    <button class="btn btn-outline-success" formaction="/one-Portfolio" formmethod = "GET">Get Portfolios</button>
+    <button class="btn btn-outline-success" action="/all-Portfolios" method="POST">Get Portfolios</button>
 </form>
