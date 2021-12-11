@@ -330,7 +330,7 @@ app.post('/machineLearning.html',  function (req, res) {
 	var callSeries = false;
 	if (callSeries == true){
 		callApiSeries(function(doneApi, ticker, apiDataType) {
-		tensorFlowML(doneApi, ["open", "close"], apiDataType);
+		tensorFlowML(doneApi, ["open", "close"], "MA supportOrResistance RSI ROC");
 		console.log(doneApi);
 		writeFile(doneApi);
 			res.render('machineLearning', {
@@ -341,7 +341,7 @@ app.post('/machineLearning.html',  function (req, res) {
 	else{
 		var series = "series"
 		var data = readFile('2020DataGoog.txt').toString();
-		series = tensorFlowML(data, ["open", "close"], ["MA supportOrResistance RSI"]);
+		series = tensorFlowML(data, ["open", "close"], "MA supportOrResistance RSI ROC");
 		res.render('machineLearning', {
 	    	series: series
 	    	});
@@ -365,67 +365,57 @@ return fs.readFileSync(fileName, (err, data) => {
 //need to make a function that takes in a tensor and gives a regression line for Technical Analysis.
 //need to make a function that calculates points of support and resistance for Technical Analysis. 
 
-function calculateItemsSum(data, start, stop) { //https://dirask.com/posts/JavaScript-moving-average-DZPeaj
-	let sum = 0;
-  	for (var j = start; j < stop; ++j) {
-      	sum += data[j];
-    }
-  	return sum;
-};
-
-function caculateMovingAverage(data, window) { //https://dirask.com/posts/JavaScript-moving-average-DZPeaj
-    const steps = data.length - window;
-	const result = [ ];
-    for (let i = 0; i < steps; ++i) {
-        const sum = calculateItemsSum(data, i, i + window);
-        result.push(sum / window);
-    }
-  	return result;
-};
-
 
 function tensorFlowML(data, features, alg){ //data is what is returned from the Time Series API call. // features is what columns we are evaluating
+	var MAIndicator = [];
+	var SARIndicator = [];
+	var RSIIndicator = [];
+	var ROC = [];
+	
 	console.log(alg);
+	console.log(alg.includes("MA"));
+	data = JSON.parse(data);
 	if (alg.includes("MA")){
-		var toTensor = [];
-		data = JSON.parse(data);
+		let values = [];
 		for (var i = 0; i < data.length; i++){
-			toTensor.push((data[i].open + data[i].close)/2); //getting the data into a format where each day represents the midpoint between the open and closing price
-			//console.log(toTensor[i]);
+			values.push((data[i].open + data[i].close)/2); //getting the data into a format where each day represents the midpoint between the open and closing price
 		}
-		var MA = [];
-		var MAWindow = 20;
+		const sma = ta.SMA
+		const MA = sma.calculate({period: 20, values: values});
 		var MAResult = [];
-		MA = caculateMovingAverage(toTensor, MAWindow)
-		//console.log(MA); //20 period moving average indicator
-		console.log(data.length);
 		for (var i = 0; i < data.length; i++){
 			if (i > 1 && data[i].close < MA[i]* 1.02 && data[i].close > MA[i]* 0.98){//this means that the current price is falling below the 20 period moving average
+				MAIndicator.push(1);
 				MAResult.push("Within 2% " + "Moving Average at i: " + MA[i] + " Data at " + i + ": " + data[i].close);
 			}
 			else{
+				MAIndicator.push(0);
 				MAResult.push("Outside 2% " + "Moving Average at i: " + MA[i] + " Data at " + i + ": " + data[i].close);
 			}
 			//console.log(MAResult[i]);
 		}
+		console.log("Get Moving Average Done.");
 		console.log(MAResult.length);
 	}
-	var supportAndResistance = []
-	
+	var supportAndResistance = [];
 	if (alg.includes("supportOrResistance")){
 		//console.log("Fibinachi candlestick measure for support and resistance");
 		for (var i = 0; i < data.length; i++){
 			if ((data[i].high - data[i].close) < (data[i].high - data[i].low)*0.382 && (data[i].high - data[i].open) < (data[i].high - data[i].low)*0.382){
+								SARIndicator.push(1);
 								supportAndResistance.push("upward high: " + data[i].high + " low: " + data[i].low + " open: " + data[i].open + " close: " + data[i].close + " " + data[i].date);
 							} 
 			else if ((data[i].high - data[i].close) > (data[i].high - data[i].low)*0.618 && (data[i].high - data[i].open) > (data[i].high - data[i].low)*0.618){
+								SARIndicator.push(-1);
 								supportAndResistance.push("downward high: " + data[i].high + " low: " + data[i].low + " open: " + data[i].open + " close: " + data[i].close + " " + data[i].date);
 							}
 			else{
+				SARIndicator.push(0);
 				supportAndResistance.push("none high: " + data[i].high + " low: " + data[i].low + " open: " + data[i].open + " close: " + data[i].close + " " + data[i].date);
 			} //getting the data into a format where each day represents the midpoint between the open and closing price
 			
 		}
+		console.log("Get S&R Done.");
 		console.log(supportAndResistance.length);
 	}
 	
@@ -438,12 +428,51 @@ function tensorFlowML(data, features, alg){ //data is what is returned from the 
 	let jsonObject = {Values: [], period: 14}; //creates a JsonObject to pass into to technical indicator library RSI calculator
 	jsonObject.values = closes;
 	if (alg.includes("RSI")){
-		console.log(jsonObject.values);
+		//console.log(jsonObject.values);
 		let result = ta.RSI.calculate(jsonObject);
 		console.log("set RSI Done.");
 		result.unshift(50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50)//make it so that each it has the same number of entries as the other data
 		console.log(result.length);
+		for (var i = 0; i < data.length; i++){
+			if (result[i] > 70){
+				RSIIndicator.push(-1); 
+			}
+			else if (result[i] < 30){
+				RSIIndicator.push(1); 
+			}
+			else{
+				RSIIndicator.push(0);
+			}
+			 
+		}
+		console.log(RSIIndicator)
 	}
+	jsonObject = {Values: [], period: 12}
+	jsonObject.values = closes;
+	if (alg.includes("ROC")){
+		//console.log(jsonObject.values);
+		let result = ta.ROC.calculate(jsonObject);
+		console.log("Get ROC Done");
+		result.unshift(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)//make it so that each it has the same number of entries as the other data
+		console.log(result.length);
+		
+		for (var i = 0; i < data.length; i++){
+			if (result[i] > 0){
+				ROC.push(1); 
+			}
+			else if (result[i] < 0){
+				ROC.push(-1); 
+			}
+			else{
+				ROC.push(0);
+			}
+		}
+		
+	}
+	console.log("MAIndicator: ", MAIndicator);
+	console.log("SARIndicator: ", SARIndicator);
+	console.log("RSIIndicator: ", RSIIndicator);
+	console.log("ROC: ", ROC);
 }
 const PORT = process.env.PORT || 5000;
 
