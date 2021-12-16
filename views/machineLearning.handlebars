@@ -2,10 +2,10 @@
 <h1>{{title}}</h1>
 </br>
 <div class='container' , style="background-color: #bbbbbb; ">
-    <h1>{{series}} ({{series}})</h1>
+    <h1>{{title}} ({{stock}})</h1>
     </br>
 
-    {{#each series}}
+    {{#each analysis}}
         <p><strong>{{@key}}:</strong> {{this}}</p>
     {{/each}}
 </div>

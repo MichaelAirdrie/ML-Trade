@@ -327,29 +327,36 @@ app.get('/portfolio.json', function (req, res) {
 
 app.post('/machineLearning.html',  function (req, res) {
 	console.log("we are expecting a time series");
-	var callSeries = false;
+	var callSeries = true;
 	if (callSeries == true){
 		callApiSeries(function(doneApi, ticker, apiDataType) {
-		tensorFlowML(doneApi, ["open", "close"], "MA supportOrResistance RSI ROC");
-		console.log(doneApi);
+		console.log("doneAPI", doneApi);
+		console.log("doneApi.toString(): ", doneApi.toString());
+		var analysis = tensorFlowML(doneApi, ["open", "close"], "MA supportOrResistance RSI ROC");
 		writeFile(doneApi);
 			res.render('machineLearning', {
-	    	series: doneApi
+	    	analysis: analysis,
+	    	title: "Analysis"
 	    	});
 		}, req.body.stock_ticker, apiDataType);
 	}
 	else{
 		var series = "series"
-		var data = readFile('2020DataGoog.txt').toString();
-		series = tensorFlowML(data, ["open", "close"], "MA supportOrResistance RSI ROC");
+		var data = readFile('./stockMarketData/2020DataGoog.txt').toString();
+		data = JSON.parse(data);
+		analysis = tensorFlowML(data, ["open", "close"], "MA supportOrResistance RSI ROC");
+		console.log(analysis);
 		res.render('machineLearning', {
-	    	series: series
+			title: "Analysis",
+	    	analysis: analysis,
+	    	stock: data[0].symbol
 	    	});
 	}
 });
 
 function writeFile(data){
-	fs.writeFile('2020Data.txt', JSON.stringify(data), (err) => {
+	let name = "./stockMarketData/" + data[0].symbol + data[0].date +".txt";  
+	fs.writeFile(name, JSON.stringify(data), (err) => {
     if (err) throw err;
 });
 }
@@ -374,7 +381,8 @@ function tensorFlowML(data, features, alg){ //data is what is returned from the 
 	
 	console.log(alg);
 	console.log(alg.includes("MA"));
-	data = JSON.parse(data);
+	//data = JSON.parse(data);
+	console.log("JSON.parse(data): ", data);
 	if (alg.includes("MA")){
 		let values = [];
 		for (var i = 0; i < data.length; i++){
@@ -469,10 +477,77 @@ function tensorFlowML(data, features, alg){ //data is what is returned from the 
 		}
 		
 	}
-	console.log("MAIndicator: ", MAIndicator);
-	console.log("SARIndicator: ", SARIndicator);
-	console.log("RSIIndicator: ", RSIIndicator);
-	console.log("ROC: ", ROC);
+	analysis = {};
+	analysis["MAIndicator"] = MAIndicator;
+	analysis["SARIndicator"] = SARIndicator;
+	analysis["ROC"] = ROC;
+	analysis["RSIIndicator"] = RSIIndicator;
+	//console.log(analysis);
+	//console.log("MAIndicator: ", MAIndicator);
+	//console.log("SARIndicator: ", SARIndicator);
+	//console.log("RSIIndicator: ", RSIIndicator);
+	//console.log("ROC: ", ROC);
+	return MachineLearning(analysis, data);
+}
+function MachineLearning(indicators, data){
+	let periodsInFuture = 1
+	let accuracy = {};
+	let ratiosList = {};
+	for (let key in indicators){
+		console.log(indicators[key])
+		accuracy[key] = howRightAreWe(indicators[key], data, periodsInFuture)
+		accuracy[key + "Correct?"] = [];
+		accuracy[key + "Incorrect?"] = [];
+		for (var i = 0; i < data.length - periodsInFuture; i++){
+			if (indicators[key][i] != 0){
+				if ((indicators[key][i] > 0 && accuracy[key][i] > 0) || (indicators[key][i] < 0 && accuracy[key][i] < 0)){
+					accuracy[key + "Correct?"].push(Math.abs(accuracy[key][i]));
+					accuracy[key + "Incorrect?"].push(0);
+				}
+				else{
+					accuracy[key + "Incorrect?"].push(Math.abs(accuracy[key][i]));
+					accuracy[key + "Correct?"].push(0);
+				}
+			}
+			else{
+				accuracy[key + "Correct?"].push(0);
+				accuracy[key + "Incorrect?"].push(0);
+			}
+		}
+		var ratios = getRatios(accuracy[key + "Correct?"], accuracy[key + "Incorrect?"])
+		ratiosList[key] = ratios;
+	}
+	console.log(ratiosList);
+	return ratiosList
+	
+}
+function getRatios(correctValues, incorrectValues){
+	numCorrect = 0;
+	numIncorrect = 0;
+	magnitudeCorrect = 0;
+	magnitudeIncorrect = 0;
+	for (var i = 0; i < correctValues.length; i++){
+		if (correctValues[i] > 0){
+			numCorrect += 1;
+			magnitudeCorrect += correctValues[i];
+		} 
+		if (incorrectValues[i] > 0){
+			numIncorrect += 1;
+			magnitudeIncorrect += incorrectValues[i];
+		} 
+	}
+	magnitudeCorrect = magnitudeCorrect/numCorrect;
+	magnitudeIncorrect = magnitudeIncorrect/numIncorrect;
+	return [magnitudeCorrect, numCorrect, magnitudeIncorrect, numIncorrect];
+}
+function howRightAreWe(oneIndicator, data, periodsInFuture){
+	var averageChangeToFuturePoint = [];
+	let change;
+	for(var i = 0; i < data.length - periodsInFuture; i++){
+		change = (data[i + periodsInFuture].close - data[i].close)/data[i].close;
+		averageChangeToFuturePoint.push(change);
+	}
+	return averageChangeToFuturePoint;
 }
 const PORT = process.env.PORT || 5000;
 
