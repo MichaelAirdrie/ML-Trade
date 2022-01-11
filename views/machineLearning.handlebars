@@ -2,11 +2,15 @@
 <h1>{{title}}</h1>
 </br>
 <div class='container' , style="background-color: #bbbbbb; ">
-    <h1>{{title}} ({{stock}})</h1>
+    <h1>{{title2}} ({{stock}})</h1>
     </br>
-
     {{#each analysis}}
-        <p><strong>{{@key}}:</strong> {{this}}</p>
+        <strong>{{ @key }}:</strong>
+        {{#each this}}
+            <li>{{ @key }}:
+            {{ this }}</li>
+        {{/each}}
+        </br>
     {{/each}}
 </div>
 <form class="d-flex" action="/machineLearning.html" method="POST">

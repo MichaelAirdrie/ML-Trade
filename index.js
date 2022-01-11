@@ -315,7 +315,7 @@ app.get('/portfolio.html',  function (req, res) {
     res.render('portfolio', {
         title: "UserFromDataBase portfolio's",
         portfolioArray: {
-            "StockName": { "amountOwned": 1 },
+            title: "Analysis of Technical Indicators",
             "StockName2": {"amountOwned": 2 }}
     });
 });
@@ -327,7 +327,7 @@ app.get('/portfolio.json', function (req, res) {
 
 app.post('/machineLearning.html',  function (req, res) {
 	console.log("we are expecting a time series");
-	var callSeries = true;
+	var callSeries = false;
 	if (callSeries == true){
 		callApiSeries(function(doneApi, ticker, apiDataType) {
 		console.log("doneAPI", doneApi);
@@ -335,8 +335,10 @@ app.post('/machineLearning.html',  function (req, res) {
 		var analysis = tensorFlowML(doneApi, ["open", "close"], "MA supportOrResistance RSI ROC");
 		writeFile(doneApi);
 			res.render('machineLearning', {
+			stock: doneApi[0].symbol,
 	    	analysis: analysis,
-	    	title: "Analysis"
+	    	title: "Analysis of Technical Indicators",
+	    	title2: "Effectiveness of Each"
 	    	});
 		}, req.body.stock_ticker, apiDataType);
 	}
@@ -346,9 +348,21 @@ app.post('/machineLearning.html',  function (req, res) {
 		data = JSON.parse(data);
 		analysis = tensorFlowML(data, ["open", "close"], "MA supportOrResistance RSI ROC");
 		console.log(analysis);
+		var analysisInOrder = {};
+		var analysisInOrderKeys = ["Average Price Change Prediction When Correct", "Amount Guessed Correctly", "Average Price Change Prediction When Incorrect", "Amount Guessed Incorrectly"];
+		for (var i = 0; i < Object.keys(analysis).length; i++){
+			var objAdded = {};
+			for (var x = 0; x < analysisInOrderKeys.length; x++){
+				objAdded[analysisInOrderKeys[x]] = analysis[Object.keys(analysis)[i]][x];
+			}
+			analysisInOrder[Object.keys(analysis)[i]] = objAdded;
+			console.log("Hello: ", analysisInOrder);
+		}
+		console.log(analysisInOrder);
 		res.render('machineLearning', {
-			title: "Analysis",
-	    	analysis: analysis,
+			title: "Analysis of Technical Indicators",
+			title2: "Effectiveness of Each",
+	    	analysis: analysisInOrder,
 	    	stock: data[0].symbol
 	    	});
 	}
@@ -380,9 +394,9 @@ function tensorFlowML(data, features, alg){ //data is what is returned from the 
 	var ROC = [];
 	
 	console.log(alg);
-	console.log(alg.includes("MA"));
+	//console.log(alg.includes("MA"));
 	//data = JSON.parse(data);
-	console.log("JSON.parse(data): ", data);
+	//console.log("JSON.parse(data): ", data);
 	if (alg.includes("MA")){
 		let values = [];
 		for (var i = 0; i < data.length; i++){
@@ -423,8 +437,8 @@ function tensorFlowML(data, features, alg){ //data is what is returned from the 
 			} //getting the data into a format where each day represents the midpoint between the open and closing price
 			
 		}
-		console.log("Get S&R Done.");
-		console.log(supportAndResistance.length);
+		//console.log("Get S&R Done.");
+		//console.log(supportAndResistance.length);
 	}
 	
 	//console.log(data);
@@ -440,7 +454,7 @@ function tensorFlowML(data, features, alg){ //data is what is returned from the 
 		let result = ta.RSI.calculate(jsonObject);
 		console.log("set RSI Done.");
 		result.unshift(50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50)//make it so that each it has the same number of entries as the other data
-		console.log(result.length);
+		//console.log(result.length);
 		for (var i = 0; i < data.length; i++){
 			if (result[i] > 70){
 				RSIIndicator.push(-1); 
@@ -453,7 +467,7 @@ function tensorFlowML(data, features, alg){ //data is what is returned from the 
 			}
 			 
 		}
-		console.log(RSIIndicator)
+		//console.log(RSIIndicator)
 	}
 	jsonObject = {Values: [], period: 12}
 	jsonObject.values = closes;
@@ -462,7 +476,7 @@ function tensorFlowML(data, features, alg){ //data is what is returned from the 
 		let result = ta.ROC.calculate(jsonObject);
 		console.log("Get ROC Done");
 		result.unshift(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)//make it so that each it has the same number of entries as the other data
-		console.log(result.length);
+		//console.log(result.length);
 		
 		for (var i = 0; i < data.length; i++){
 			if (result[i] > 0){
