@@ -4,6 +4,9 @@
 <div class='container' , style="background-color: #bbbbbb; ">
     <h1>{{title2}} ({{stock}})</h1>
     </br>
+    <p>Total growth if purchased at start of time period and sold at the end:
+    <strong>{{totalGrowth}}</strong>
+    </p>
     {{#each analysis}}
         <strong>{{ @key }}:</strong>
         {{#each this}}

@@ -303,11 +303,17 @@ app.get('/terms.html',  function (req, res) {
 });
 
 app.get('/machineLearning.html',  function (req, res) {
-    res.render('machineLearning', {
-    	email: "UserEmail",
-    	portfolioArray: {
-            "StockName": { "amountOwned": 1 },
-            "StockName2": {"amountOwned": 2 }}
+    var data = readFile('./stockMarketData/AAPL2020-01-02.txt').toString();
+		data = JSON.parse(data);
+		analysis = tensorFlowML(data, ["open", "close"], "MA supportOrResistance RSI ROC");
+		var totalGrowth = Math.round((((data[data.length - 1].close - data[0].close)/data[data.length - 1].close) * 10000) / 100) + "%";
+		var analysisInOrder = SendIt(analysis);
+		res.render('machineLearning', {
+			title: "Analysis of Technical Indicators",
+			title2: "Effectiveness of Each",
+	    	analysis: analysisInOrder,
+	    	totalGrowth: totalGrowth,
+	    	stock: data[0].symbol
     });
 });
 
@@ -327,46 +333,58 @@ app.get('/portfolio.json', function (req, res) {
 
 app.post('/machineLearning.html',  function (req, res) {
 	console.log("we are expecting a time series");
-	var callSeries = false;
+	var callSeries = true;
 	if (callSeries == true){
 		callApiSeries(function(doneApi, ticker, apiDataType) {
-		console.log("doneAPI", doneApi);
-		console.log("doneApi.toString(): ", doneApi.toString());
-		var analysis = tensorFlowML(doneApi, ["open", "close"], "MA supportOrResistance RSI ROC");
+			var analysis = tensorFlowML(doneApi, ["open", "close"], "MA supportOrResistance RSI ROC");
+			var totalGrowth = Math.round((((doneApi[doneApi.length - 1].close - doneApi[0].close)/doneApi[doneApi.length - 1].close) * 10000) / 100) + "%";
+			var analysisInOrder = {};
+			var analysisInOrderKeys = ["Average Price Change Prediction When Correct", "Amount Guessed Correctly", "Average Price Change Prediction When Incorrect", "Amount Guessed Incorrectly", "Percentage Accumulated Over Time Period"];
+			for (var i = 0; i < Object.keys(analysis).length; i++){
+				var objAdded = {};
+				for (var x = 0; x < analysisInOrderKeys.length; x++){
+					objAdded[analysisInOrderKeys[x]] = analysis[Object.keys(analysis)[i]][x];
+				}
+				analysisInOrder[Object.keys(analysis)[i]] = objAdded;
+			}
 		writeFile(doneApi);
 			res.render('machineLearning', {
 			stock: doneApi[0].symbol,
-	    	analysis: analysis,
+	    	analysis: analysisInOrder,
 	    	title: "Analysis of Technical Indicators",
+	    	totalGrowth: totalGrowth,
 	    	title2: "Effectiveness of Each"
 	    	});
 		}, req.body.stock_ticker, apiDataType);
 	}
 	else{
 		var series = "series"
-		var data = readFile('./stockMarketData/2020DataGoog.txt').toString();
+		var data = readFile('./stockMarketData/ENB2020-01-02.txt').toString();
 		data = JSON.parse(data);
 		analysis = tensorFlowML(data, ["open", "close"], "MA supportOrResistance RSI ROC");
-		console.log(analysis);
-		var analysisInOrder = {};
-		var analysisInOrderKeys = ["Average Price Change Prediction When Correct", "Amount Guessed Correctly", "Average Price Change Prediction When Incorrect", "Amount Guessed Incorrectly"];
-		for (var i = 0; i < Object.keys(analysis).length; i++){
-			var objAdded = {};
-			for (var x = 0; x < analysisInOrderKeys.length; x++){
-				objAdded[analysisInOrderKeys[x]] = analysis[Object.keys(analysis)[i]][x];
-			}
-			analysisInOrder[Object.keys(analysis)[i]] = objAdded;
-			console.log("Hello: ", analysisInOrder);
-		}
-		console.log(analysisInOrder);
+		var totalGrowth = Math.round((((data[data.length - 1].close - data[0].close)/data[data.length - 1].close) * 10000) / 100) + "%";
+		var analysisInOrder = SendIt(analysis);
 		res.render('machineLearning', {
 			title: "Analysis of Technical Indicators",
 			title2: "Effectiveness of Each",
 	    	analysis: analysisInOrder,
+	    	totalGrowth: totalGrowth,
 	    	stock: data[0].symbol
 	    	});
 	}
 });
+function SendIt(inputData){
+	var analysisInOrder = {};
+	var analysisInOrderKeys = ["Average Price Change Prediction When Correct", "Amount Guessed Correctly", "Average Price Change Prediction When Incorrect", "Amount Guessed Incorrectly", "Percentage Accumulated Over Time Period"];
+	for (var i = 0; i < Object.keys(analysis).length; i++){
+		var objAdded = {};
+		for (var x = 0; x < analysisInOrderKeys.length; x++){
+			objAdded[analysisInOrderKeys[x]] = analysis[Object.keys(analysis)[i]][x];
+		}
+		analysisInOrder[Object.keys(analysis)[i]] = objAdded;
+	}
+	return analysisInOrder;
+}
 
 function writeFile(data){
 	let name = "./stockMarketData/" + data[0].symbol + data[0].date +".txt";  
@@ -552,7 +570,10 @@ function getRatios(correctValues, incorrectValues){
 	}
 	magnitudeCorrect = magnitudeCorrect/numCorrect;
 	magnitudeIncorrect = magnitudeIncorrect/numIncorrect;
-	return [magnitudeCorrect, numCorrect, magnitudeIncorrect, numIncorrect];
+	totalProfitOrLoss = (1 + magnitudeCorrect)**numCorrect/((1 + magnitudeIncorrect)**numIncorrect);
+	console.log("totalProfitOrLoss: ", totalProfitOrLoss);
+	totalProfitOrLoss = Math.round((totalProfitOrLoss - 1) * 10000)/100 + "%";
+	return [magnitudeCorrect, numCorrect, magnitudeIncorrect, numIncorrect, totalProfitOrLoss];
 }
 function howRightAreWe(oneIndicator, data, periodsInFuture){
 	var averageChangeToFuturePoint = [];
