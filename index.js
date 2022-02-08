@@ -326,6 +326,11 @@ app.get('/portfolio.html',  function (req, res) {
     });
 });
 
+app.get('/officialDocument.html',  function (req, res) {
+    res.render('officialDocument', {
+    });
+});
+
 app.get('/portfolio.json', function (req, res) {
     console.log((path.normalize(__dirname + '/portfolio.json')));
     res.sendFile(path.normalize(__dirname + '/portfolio.json'))
